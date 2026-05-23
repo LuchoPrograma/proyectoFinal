@@ -1,11 +1,11 @@
-package services;
+package com.example.proyectoFinal.services;
 
 
-import entities.Base;
+import com.example.proyectoFinal.entities.Base;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import repositories.BaseRepository;
+import com.example.proyectoFinal.repositories.BaseRepository;
 
 import java.io.Serializable;
 import java.util.List;

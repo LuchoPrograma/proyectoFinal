@@ -1,6 +1,6 @@
-package repositories;
+package com.example.proyectoFinal.repositories;
 
-import entities.Cliente;
+import com.example.proyectoFinal.entities.Cliente;
 import org.springframework.stereotype.Repository;
 
 @Repository

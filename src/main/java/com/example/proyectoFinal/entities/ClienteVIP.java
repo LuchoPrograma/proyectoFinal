@@ -1,4 +1,4 @@
-package entities;
+package com.example.proyectoFinal.entities;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

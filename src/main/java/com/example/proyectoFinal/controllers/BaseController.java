@@ -1,7 +1,7 @@
-package controllers;
+package com.example.proyectoFinal.controllers;
 
 
-import entities.Base;
+import com.example.proyectoFinal.entities.Base;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;

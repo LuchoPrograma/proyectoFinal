@@ -1,13 +1,13 @@
-package controllers;
+package com.example.proyectoFinal.controllers;
 
 
-import entities.Base;
+import com.example.proyectoFinal.entities.Base;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import services.BaseServiceImpl;
+import com.example.proyectoFinal.services.BaseServiceImpl;
 
 public abstract class BaseControllerImpl<E extends Base, S extends BaseServiceImpl<E, Long>> implements BaseController<E, Long> {
     @Autowired

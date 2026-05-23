@@ -1,7 +1,7 @@
-package services;
+package com.example.proyectoFinal.services;
 
 
-import entities.Base;
+import com.example.proyectoFinal.entities.Base;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

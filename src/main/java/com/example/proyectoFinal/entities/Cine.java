@@ -1,4 +1,4 @@
-package entities;
+package com.example.proyectoFinal.entities;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
