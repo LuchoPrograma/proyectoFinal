@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import com.example.proyectoFinal.services.BaseServiceImpl;
 
 public abstract class BaseControllerImpl<E extends Base, S extends BaseServiceImpl<E, Long>> implements BaseController<E, Long> {
+    @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
     @Autowired
     protected S servicio;
 
