@@ -17,6 +17,9 @@ import org.hibernate.envers.Audited;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 @Entity
 @Table(name = "funcion")
 @NoArgsConstructor
@@ -33,6 +36,7 @@ public class Funcion extends Base {
     @JoinColumn(name = "fk_pelicula")
     private Pelicula pelicula;
 
+    @JsonIgnoreProperties("funciones")
     @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(
             name = "funcion_entrada",
@@ -41,6 +45,7 @@ public class Funcion extends Base {
     )
     private List<Entrada> entradas = new ArrayList<>();
 
+    @JsonIgnore
     @ManyToMany(mappedBy = "funciones")
     private List<Sala> salas = new ArrayList<>();
 }

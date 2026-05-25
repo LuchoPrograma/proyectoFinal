@@ -13,6 +13,8 @@ import org.hibernate.envers.Audited;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 @Entity
 @Table(name = "cliente")
 @NoArgsConstructor
@@ -28,6 +30,7 @@ public class Cliente extends Base {
     @Column(name = "email")
     private String email;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "cliente")
     private List<Venta> ventas = new ArrayList<>();
 }

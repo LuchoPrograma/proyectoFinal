@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal de Taquilla</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="app-container">
+        <header class="app-header">
+            <h1>Ingreso al portal de taquilla</h1>
+        </header>
+        
+        <main class="app-main">
+            <!-- Left Side: Sucursales -->
+            <section class="branches-section">
+                <h2>Seleccionar Sucursal:</h2>
+                <div class="branches-grid" id="branchesGrid">
+                    <!-- Cards will be dynamically inserted here -->
+                </div>
+            </section>
+            
+            <!-- Right Side: Empleados -->
+            <section class="employees-section">
+                <h2>Empleado</h2>
+                <div class="search-container">
+                    <input type="text" id="searchInput" placeholder="Buscar por DNI o nombre" autocomplete="off">
+                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                </div>
+                
+                <div class="employees-list" id="employeesList">
+                    <div class="empty-state">Seleccione una sucursal para ver los empleados.</div>
+                </div>
+            </section>
+        </main>
+        
+        <footer class="app-footer">
+            <button id="btnIngresar" class="btn-primary" disabled>Ingresar</button>
+        </footer>
+    </div>
+
+    <script src="js/app.js"></script>
+</body>
+</html>

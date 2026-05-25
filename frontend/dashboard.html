@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Ventas - Taquilla</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="app-container dashboard-container">
+        <!-- Dashboard Header -->
+        <header class="dashboard-header">
+            <div class="user-greeting-box">
+                <div class="user-avatar" id="userAvatar">--</div>
+                <div class="user-info">
+                    <span class="welcome-text">¡Bienvenido al portal!</span>
+                    <h1 id="employeeGreeting">Cargando empleado...</h1>
+                    <span class="user-dni" id="employeeDni">DNI: --</span>
+                </div>
+            </div>
+            <div class="branch-badge">
+                <svg class="branch-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+                <span id="branchName">Cargando sucursal...</span>
+            </div>
+        </header>
+        
+        <!-- Dashboard Actions & Title -->
+        <section class="dashboard-controls">
+            <div class="controls-title-group">
+                <button id="btnVolver" class="btn-secondary">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                    Volver atrás
+                </button>
+                <h2>Últimas Ventas Realizadas</h2>
+            </div>
+            <button id="btnNuevaVenta" class="btn-primary btn-add-sale">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                Registrar Venta
+            </button>
+        </section>
+        
+        <!-- Dashboard Sales Table -->
+        <main class="dashboard-main">
+            <div class="table-container">
+                <table class="sales-table">
+                    <thead>
+                        <tr>
+                            <th>Fecha</th>
+                            <th>Cliente</th>
+                            <th>Película</th>
+                            <th>Función</th>
+                            <th>Entradas</th>
+                            <th>Pago</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="salesTableBody">
+                        <tr>
+                            <td colspan="7">
+                                <div class="table-loading">
+                                    <div class="spinner"></div>
+                                    Cargando últimas ventas realizadas...
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+        
+        <footer class="dashboard-footer">
+            <span>Taquilla Sistema v1.1.0 • Conectado exitosamente</span>
+        </footer>
+    </div>
+
+    <script src="js/dashboard.js"></script>
+</body>
+</html>

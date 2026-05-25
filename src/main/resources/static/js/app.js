@@ -9,8 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let selectedEmpleado = null;
     let selectedCine = null;
 
-    // Fetch data from backend
-    fetch('http://localhost:9000/api/v1/cines')
+    // Fetch data from backend using relative path (portable origin)
+    fetch('/api/v1/cines')
         .then(response => response.json())
         .then(data => {
             allCines = data;
