@@ -11,6 +11,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.envers.Audited;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "empleado")
@@ -27,6 +28,7 @@ public class Empleado extends Base {
     @Column(name = "dni")
     private int dni;
 
+    @JsonIgnore
     @ManyToMany(mappedBy = "empleados")
     private List<Cine> cines = new ArrayList<>();
 }
