@@ -1,0 +1,14 @@
+Para registrar una nueva venta abriremos un modal mostrando el formulario que
+permita llenar los campos pertinentes con sus respectivas validaciones para evitar errores.
+Limitate a usar los estilos que encuentres en styles.css
+
+Para registrar una venta, el empleado debe ingresar
+-Datos del cliente (nombre, email): Puede seleccionar uno existente o crear uno nuevo (Atencion con intentar agregar un nuevo cliente que ya existe)
+-Selector de funciones. Cada pelicula tiene varias funciones/horarios disponibles en determinadas salas
+-Selector de asientos
+-Cantidad de entradas
+-Selector de metodo de pago
+-Precio total según cantidad (Cada entrada sale $8000)
+-Boton de generar tickets/venta -> Al hacer click se abre una ventana preguntando si desea confirmar(puede ser la misma del navegador) y al clickear "si", muestra en el mismo modal una confirmación de la operacion realizada incluyendo los datos de los tickets recien comprados con todos los datos de la funcion
+
+Otros campos que creas pertinentes para completar la venta y que se cargue en la lista de ventas

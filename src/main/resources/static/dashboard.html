@@ -8,81 +8,232 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div class="app-container dashboard-container">
-        <!-- Dashboard Header -->
-        <header class="dashboard-header">
-            <div class="user-greeting-box">
-                <div class="user-avatar" id="userAvatar">--</div>
-                <div class="user-info">
-                    <span class="welcome-text">¡Bienvenido al portal!</span>
-                    <h1 id="employeeGreeting">Cargando empleado...</h1>
-                    <span class="user-dni" id="employeeDni">DNI: --</span>
+<div class="app-container dashboard-container">
+    <!-- Dashboard Header -->
+    <header class="dashboard-header">
+        <div class="user-greeting-box">
+            <div class="user-avatar" id="userAvatar">--</div>
+            <div class="user-info">
+                <span class="welcome-text">¡Bienvenido al portal!</span>
+                <h1 id="employeeGreeting">Cargando empleado...</h1>
+                <span class="user-dni" id="employeeDni">DNI: --</span>
+            </div>
+        </div>
+        <div class="branch-badge">
+            <svg class="branch-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+            <span id="branchName">Cargando sucursal...</span>
+        </div>
+    </header>
+
+    <!-- Dashboard Actions & Title -->
+    <section class="dashboard-controls">
+        <div class="controls-title-group">
+            <button id="btnVolver" class="btn-secondary">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+                Volver atrás
+            </button>
+            <h2>Últimas Ventas Realizadas</h2>
+        </div>
+        <button id="btnNuevaVenta" class="btn-primary btn-add-sale">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Registrar Venta
+        </button>
+    </section>
+
+    <!-- Dashboard Sales Table -->
+    <main class="dashboard-main">
+        <div class="table-container">
+            <table class="sales-table">
+                <thead>
+                <tr>
+                    <th>Fecha</th>
+                    <th>Cliente</th>
+                    <th>Película</th>
+                    <th>Función</th>
+                    <th>Entradas</th>
+                    <th>Pago</th>
+                    <th>Total</th>
+                </tr>
+                </thead>
+                <tbody id="salesTableBody">
+                <tr>
+                    <td colspan="7">
+                        <div class="table-loading">
+                            <div class="spinner"></div>
+                            Cargando últimas ventas realizadas...
+                        </div>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <footer class="dashboard-footer">
+        <span>Taquilla Sistema v1.1.0 • Conectado exitosamente</span>
+    </footer>
+</div>
+
+<!-- =====================================================
+     MODAL: REGISTRO DE NUEVA VENTA
+====================================================== -->
+<div id="ventaModal" class="modal-overlay hidden">
+    <div class="modal-card">
+
+        <!-- Header -->
+        <div class="modal-header">
+            <h3>Registrar Nueva Venta</h3>
+            <button id="btnModalClose" class="modal-btn-close" title="Cerrar">&times;</button>
+        </div>
+
+        <!-- Indicador de pasos -->
+        <div class="step-indicator" id="stepIndicator">
+            <div class="step-item">
+                <div class="step-dot active" id="dot-1">1</div>
+                <span class="step-label active" id="lbl-1">Cliente</span>
+            </div>
+            <div class="step-line"></div>
+            <div class="step-item">
+                <div class="step-dot" id="dot-2">2</div>
+                <span class="step-label" id="lbl-2">Función</span>
+            </div>
+            <div class="step-line"></div>
+            <div class="step-item">
+                <div class="step-dot" id="dot-3">3</div>
+                <span class="step-label" id="lbl-3">Entradas</span>
+            </div>
+            <div class="step-line"></div>
+            <div class="step-item">
+                <div class="step-dot" id="dot-4">4</div>
+                <span class="step-label" id="lbl-4">Pago</span>
+            </div>
+        </div>
+
+        <!-- Cuerpo del modal -->
+        <div class="modal-body">
+
+            <!-- PASO 1: Datos del cliente -->
+            <div id="modal-step-1" class="modal-step">
+                <p class="step-title">Datos del Cliente</p>
+
+                <!-- Toggle existente / nuevo -->
+                <div class="client-toggle">
+                    <div class="toggle-option active" id="toggle-existing" data-type="existing">Cliente existente</div>
+                    <div class="toggle-option" id="toggle-new" data-type="new">Nuevo cliente</div>
+                </div>
+
+                <!-- Cliente existente -->
+                <div id="existing-client-section">
+                    <div class="form-group">
+                        <label class="form-label" for="selectCliente">Seleccionar cliente</label>
+                        <select id="selectCliente" class="form-select">
+                            <option value="">Cargando clientes...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Nuevo cliente -->
+                <div id="new-client-section" class="hidden">
+                    <div class="form-group">
+                        <label class="form-label" for="inputNombre">Nombre completo</label>
+                        <input type="text" id="inputNombre" class="form-input" placeholder="Ej: Juan García" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="inputEmail">Email</label>
+                        <input type="email" id="inputEmail" class="form-input" placeholder="Ej: juan@email.com" autocomplete="off">
+                        <div class="field-error" id="emailError"></div>
+                    </div>
                 </div>
             </div>
-            <div class="branch-badge">
-                <svg class="branch-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                </svg>
-                <span id="branchName">Cargando sucursal...</span>
-            </div>
-        </header>
-        
-        <!-- Dashboard Actions & Title -->
-        <section class="dashboard-controls">
-            <div class="controls-title-group">
-                <button id="btnVolver" class="btn-secondary">
-                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <line x1="19" y1="12" x2="5" y2="12"></line>
-                        <polyline points="12 19 5 12 12 5"></polyline>
-                    </svg>
-                    Volver atrás
-                </button>
-                <h2>Últimas Ventas Realizadas</h2>
-            </div>
-            <button id="btnNuevaVenta" class="btn-primary btn-add-sale">
-                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                </svg>
-                Registrar Venta
-            </button>
-        </section>
-        
-        <!-- Dashboard Sales Table -->
-        <main class="dashboard-main">
-            <div class="table-container">
-                <table class="sales-table">
-                    <thead>
-                        <tr>
-                            <th>Fecha</th>
-                            <th>Cliente</th>
-                            <th>Película</th>
-                            <th>Función</th>
-                            <th>Entradas</th>
-                            <th>Pago</th>
-                            <th>Total</th>
-                        </tr>
-                    </thead>
-                    <tbody id="salesTableBody">
-                        <tr>
-                            <td colspan="7">
-                                <div class="table-loading">
-                                    <div class="spinner"></div>
-                                    Cargando últimas ventas realizadas...
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </main>
-        
-        <footer class="dashboard-footer">
-            <span>Taquilla Sistema v1.1.0 • Conectado exitosamente</span>
-        </footer>
-    </div>
 
-    <script src="js/dashboard.js"></script>
+            <!-- PASO 2: Selección de función -->
+            <div id="modal-step-2" class="modal-step hidden">
+                <p class="step-title">Selección de Función</p>
+                <div class="form-group">
+                    <label class="form-label" for="selectPelicula">Película</label>
+                    <select id="selectPelicula" class="form-select">
+                        <option value="">Seleccionar película...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="selectFuncion">Función / Horario</label>
+                    <select id="selectFuncion" class="form-select" disabled>
+                        <option value="">Primero seleccione una película</option>
+                    </select>
+                    <div class="field-error" id="funcionError"></div>
+                </div>
+            </div>
+
+            <!-- PASO 3: Selección de entradas y asientos -->
+            <div id="modal-step-3" class="modal-step hidden">
+                <p class="step-title">Selección de Asientos</p>
+                <div class="form-group">
+                    <label class="form-label" for="inputCantidad">Cantidad de entradas</label>
+                    <input type="number" id="inputCantidad" class="form-input" min="1" value="1">
+                    <div class="field-error" id="cantidadError"></div>
+                </div>
+
+                <div class="seats-info" id="seatsInfo">Seleccione los asientos en la grilla:</div>
+
+                <div class="seats-legend">
+                    <div class="seats-legend-item">
+                        <div class="seat-sample available"></div> Disponible
+                    </div>
+                    <div class="seats-legend-item">
+                        <div class="seat-sample selected"></div> Seleccionado
+                    </div>
+                    <div class="seats-legend-item">
+                        <div class="seat-sample occupied"></div> Ocupado
+                    </div>
+                </div>
+
+                <div id="seatsGrid" class="seats-grid"></div>
+            </div>
+
+            <!-- PASO 4: Pago y resumen -->
+            <div id="modal-step-4" class="modal-step hidden">
+                <p class="step-title">Método de Pago</p>
+                <div class="payment-options">
+                    <button class="payment-option active" id="pay-tarjeta" data-tipo="TARJETA">💳 Tarjeta</button>
+                    <button class="payment-option" id="pay-efectivo" data-tipo="EFECTIVO">💵 Efectivo</button>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="inputFecha">Fecha de venta</label>
+                    <input type="date" id="inputFecha" class="form-input">
+                </div>
+
+                <p class="step-title" style="margin-top:1.25rem;">Resumen</p>
+                <div class="sale-summary" id="saleSummary">
+                    <!-- Se llena dinámicamente -->
+                </div>
+            </div>
+
+            <!-- PASO 5: Pantalla de éxito / confirmación -->
+            <div id="modal-step-5" class="modal-step hidden">
+                <!-- Se llena dinámicamente tras confirmar -->
+            </div>
+
+        </div>
+
+        <!-- Footer de navegación -->
+        <div class="modal-footer" id="modalFooter">
+            <button id="btnPrevStep" class="btn-secondary hidden">Anterior</button>
+            <button id="btnNextStep" class="btn-primary">Siguiente</button>
+        </div>
+
+    </div>
+</div>
+
+<script src="js/dashboard.js"></script>
 </body>
 </html>
