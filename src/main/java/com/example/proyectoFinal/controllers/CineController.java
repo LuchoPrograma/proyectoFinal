@@ -13,6 +13,20 @@ import org.springframework.web.bind.annotation.*;
 public class CineController extends BaseControllerImpl<Cine, CineServiceImpl> {
 
     /**
+     * Endpoint para obtener los clientes registrados en un cine específico.
+     * Solo devuelve los clientes que tienen ventas en ese cine.
+     */
+    @GetMapping("/{id}/clientes")
+    public ResponseEntity<?> obtenerClientesPorCine(@PathVariable Long id) {
+        try {
+            return ResponseEntity.status(HttpStatus.OK).body(servicio.obtenerClientesPorCine(id));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("{\"error\":\"" + e.getMessage() + "\"}");
+        }
+    }
+
+    /**
      * Endpoint dedicado para registrar una venta en un cine.
      * Evita el error "Multiple representations of the same entity" de Hibernate
      * que ocurría al enviar el árbol completo del Cine via PUT.

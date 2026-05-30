@@ -87,26 +87,30 @@ document.addEventListener('DOMContentLoaded', () => {
             const dateFmt   = dateObj.toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' })
                             + ' ' + dateObj.toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
             const clientName = venta.cliente ? venta.cliente.nombre : 'Consumidor Final';
-            const qty        = venta.entradas ? venta.entradas.length : 0;
             const tipoPago   = venta.pago ? venta.pago.tipo : 'EFECTIVO';
             const total      = venta.pago
                 ? `$${venta.pago.monto.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                 : '$0,00';
 
-            // Try to get movie/function info from entradas.funciones
+            // Try to get movie/function info from venta.funcion
             let movieTitle   = '—';
             let functionTime = '—';
-            if (venta.entradas && venta.entradas.length > 0) {
-                const firstEntrada = venta.entradas[0];
-                if (firstEntrada.funciones && firstEntrada.funciones.length > 0) {
-                    const func = firstEntrada.funciones[0];
-                    functionTime = func.horario || '—';
-                    movieTitle   = func.pelicula ? func.pelicula.titulo : '—';
-                }
+            
+            if (venta.funcion) {
+                functionTime = venta.funcion.horario || '—';
+                movieTitle   = venta.funcion.pelicula ? venta.funcion.pelicula.titulo : '—';
             }
+
             // Fallback: annotated from modal state on freshly added rows
             if (movieTitle === '—' && venta._movieTitle)   movieTitle   = venta._movieTitle;
             if (functionTime === '—' && venta._funcTime)   functionTime = venta._funcTime;
+            
+            // Calculate qty based on monto / unit price, as sale no longer stores explicit tickets
+            let calcQty = 0;
+            if (venta.pago && venta.pago.monto) {
+                calcQty = Math.round(venta.pago.monto / PRECIO_ENTRADA);
+            }
+            const qty = calcQty > 0 ? calcQty : 0;
 
             row.innerHTML = `
                 <td class="td-date">${dateFmt}</td>
@@ -253,7 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ════════════════════════════════════════════════════════════════════════
 
     function fetchClientes() {
-        fetch(`${BASE_URL}/clientes`)
+        fetch(`${BASE_URL}/cines/${branch.id}/clientes`)
             .then(r => r.json())
             .then(data => {
                 allClientes = data;

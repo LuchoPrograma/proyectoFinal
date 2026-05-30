@@ -48,8 +48,13 @@ public class Cine extends Base {
     )
     private List<Empleado> empleados = new ArrayList<>();
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = false)
-    @JoinColumn(name = "fk_cine")
+    /**
+     * Relación de lectura: Cine no gestiona el ciclo de vida de Venta.
+     * La FK fk_cine es seteada por VentaRepository.assignToCine() vía query nativa.
+     * Sin cascade para evitar el bug de nulls en ventas previas con lazy collections.
+     */
+    @OneToMany(orphanRemoval = false)
+    @JoinColumn(name = "fk_cine", insertable = false, updatable = false)
     private List<Venta> ventas = new ArrayList<>();
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
