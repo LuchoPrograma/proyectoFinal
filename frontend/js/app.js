@@ -1,15 +1,24 @@
+/**
+ * @file app.js
+ * @description Pantalla principal de selección de sucursal y empleado (login).
+ * Permite al usuario elegir una sucursal de cine y luego seleccionar su empleado
+ * para ingresar al sistema. La selección se persiste en localStorage antes de
+ * redirigir al dashboard.
+ */
+
 document.addEventListener('DOMContentLoaded', () => {
     const branchesGrid = document.getElementById('branchesGrid');
     const employeesList = document.getElementById('employeesList');
     const searchInput = document.getElementById('searchInput');
     const btnIngresar = document.getElementById('btnIngresar');
 
+    // Estado local de la pantalla de selección
     let allCines = [];
     let currentEmpleados = [];
     let selectedEmpleado = null;
     let selectedCine = null;
 
-    // Fetch data from backend
+    // Obtiene la lista de todas las sucursales desde el backend al cargar la página
     fetch('http://localhost:9000/api/v1/cines')
         .then(response => response.json())
         .then(data => {
@@ -17,10 +26,14 @@ document.addEventListener('DOMContentLoaded', () => {
             renderBranches();
         })
         .catch(err => {
-            console.error('Error fetching cines:', err);
+            console.error('Error al obtener las sucursales:', err);
             branchesGrid.innerHTML = '<div class="empty-state">Error al cargar las sucursales. Verifique que el backend esté corriendo.</div>';
         });
 
+    /**
+     * Renderiza las sucursales como tarjetas con radio buttons en la grilla.
+     * Al seleccionar una sucursal se cargan automáticamente sus empleados.
+     */
     function renderBranches() {
         branchesGrid.innerHTML = '';
         allCines.forEach(cine => {
@@ -44,6 +57,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    /**
+     * Actualiza el estado interno con los empleados de la sucursal seleccionada
+     * y resetea la selección de empleado y el campo de búsqueda.
+     * @param {Object} cine - Objeto de la sucursal seleccionada, incluyendo su lista de empleados.
+     */
     function loadEmpleados(cine) {
         selectedCine = cine;
         currentEmpleados = cine.empleados || [];
@@ -53,6 +71,12 @@ document.addEventListener('DOMContentLoaded', () => {
         renderEmpleados(currentEmpleados);
     }
 
+    /**
+     * Renderiza la lista de empleados recibida, resaltando visualmente el que
+     * está actualmente seleccionado. Al hacer clic en un empleado se actualiza
+     * la selección y se habilita el botón de ingreso.
+     * @param {Array<Object>} empleados - Lista de empleados a mostrar.
+     */
     function renderEmpleados(empleados) {
         employeesList.innerHTML = '';
         
@@ -68,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 div.classList.add('selected');
             }
             
-            // Generate initials
+            // Genera las iniciales del empleado tomando la primera letra de cada palabra del nombre
             const initials = emp.nombre.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
 
             div.innerHTML = `
@@ -82,16 +106,21 @@ document.addEventListener('DOMContentLoaded', () => {
             div.addEventListener('click', () => {
                 selectedEmpleado = emp;
                 btnIngresar.disabled = false;
-                renderEmpleados(empleados); // Re-render to show selection
+                // Vuelve a renderizar la lista para reflejar la nueva selección visualmente
+                renderEmpleados(empleados);
             });
 
             employeesList.appendChild(div);
         });
     }
 
-    // Input Validation and Filtering
+    /**
+     * Filtro de búsqueda en tiempo real sobre la lista de empleados de la sucursal activa.
+     * Sanitiza la entrada eliminando caracteres no alfanuméricos para evitar inyecciones,
+     * y filtra por coincidencia parcial en el nombre o el DNI del empleado.
+     */
     searchInput.addEventListener('input', (e) => {
-        // Replace non-alphanumeric characters instantly
+        // Elimina inmediatamente cualquier carácter que no sea letra, número o espacio
         let val = e.target.value;
         const validVal = val.replace(/[^a-zA-Z0-9\s]/g, '');
         
@@ -99,7 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
             e.target.value = validVal;
         }
 
-        // Filter current empleados
+        // Filtra los empleados de la sucursal actual según el término ingresado
         const searchTerm = validVal.toLowerCase();
         const filtered = currentEmpleados.filter(emp => 
             emp.nombre.toLowerCase().includes(searchTerm) || 
@@ -109,6 +138,10 @@ document.addEventListener('DOMContentLoaded', () => {
         renderEmpleados(filtered);
     });
 
+    /**
+     * Persiste la sucursal y el empleado seleccionados en localStorage
+     * y redirige al dashboard para iniciar la sesión de trabajo.
+     */
     btnIngresar.addEventListener('click', () => {
         if(selectedEmpleado && selectedCine) {
             localStorage.setItem('selectedEmpleado', JSON.stringify(selectedEmpleado));

@@ -1,40 +1,85 @@
+/**
+ * @file dashboard.js
+ * @description Módulo de control del panel de administración (dashboard) de la sucursal de cine.
+ * Gestiona el flujo de trabajo para registrar nuevas ventas de entradas en múltiples pasos (wizard),
+ * la visualización en tiempo real del historial de ventas de la sucursal activa, la interacción con la sala
+ * y selección gráfica de asientos libres/ocupados, la creación de clientes al vuelo y la generación y
+ * visualización de comprobantes (tickets) al finalizar exitosamente la venta.
+ */
+
 document.addEventListener('DOMContentLoaded', () => {
+    /**
+     * URL base de la API REST de Spring Boot.
+     * @type {string}
+     */
     const BASE_URL = 'http://localhost:9000/api/v1';
+
+    /**
+     * Precio unitario fijo establecido para cada entrada de cine.
+     * @type {number}
+     */
     const PRECIO_ENTRADA = 8000;
 
-    // ── Auth check ──────────────────────────────────────────────────────────
+    // ── Control de autenticación y sesión de empleado/sucursal ───────────────
     const employeeDataStr = localStorage.getItem('selectedEmpleado');
     const branchDataStr   = localStorage.getItem('selectedCine');
+    
+    // Si no existen datos de sesión guardados, redirigir inmediatamente al login (index.html)
     if (!employeeDataStr || !branchDataStr) {
         window.location.href = 'index.html';
         return;
     }
 
+    /**
+     * Objeto con los datos del empleado logueado.
+     * @type {Object}
+     */
     const employee = JSON.parse(employeeDataStr);
+
+    /**
+     * Objeto con los datos de la sucursal (cine) seleccionada.
+     * @type {Object}
+     */
     const branch   = JSON.parse(branchDataStr);
 
-    // ── Header ──────────────────────────────────────────────────────────────
+    // ── Configuración del encabezado de la página (Header) ───────────────────
     document.getElementById('employeeGreeting').textContent = employee.nombre;
     document.getElementById('employeeDni').textContent      = `DNI: ${employee.dni}`;
     document.getElementById('branchName').textContent       = branch.nombre;
+    
+    // Generar iniciales del empleado para el círculo de avatar visual
     const initials = employee.nombre.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
     document.getElementById('userAvatar').textContent = initials;
 
-    // ── Back button ─────────────────────────────────────────────────────────
+    // ── Botón de cierre de sesión / Volver ──────────────────────────────────
     document.getElementById('btnVolver').addEventListener('click', () => {
+        // Limpiar el estado de sesión actual en localStorage al salir
         localStorage.removeItem('selectedEmpleado');
         localStorage.removeItem('selectedCine');
         window.location.href = 'index.html';
     });
 
-    // ── Global state ─────────────────────────────────────────────────────────
+    // ── Estado global de la aplicación ───────────────────────────────────────
+    /**
+     * Almacena los datos completos de la sucursal de cine actual cargados desde el backend.
+     * @type {Object|null}
+     */
     let cineData    = null;
+
+    /**
+     * Lista de todos los clientes con ventas asociadas a esta sucursal.
+     * @type {Array<Object>}
+     */
     let allClientes = [];
 
-    // Modal step state (reset on each open)
+    /**
+     * Estado del paso a paso (wizard) para el registro de una venta.
+     * Se reinicia cada vez que se abre el modal.
+     * @type {Object}
+     */
     let ms = {};   // ms = modalState
 
-    // ── DOM refs ─────────────────────────────────────────────────────────────
+    // ── Referencias a elementos del DOM ─────────────────────────────────────
     const salesTableBody = document.getElementById('salesTableBody');
     const ventaModal     = document.getElementById('ventaModal');
     const btnModalClose  = document.getElementById('btnModalClose');
@@ -43,7 +88,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalFooter    = document.getElementById('modalFooter');
     const stepIndicator  = document.getElementById('stepIndicator');
 
-    // ── Load initial cine data ───────────────────────────────────────────────
+    // ── Carga inicial de datos del cine ──────────────────────────────────────
+    /**
+     * Carga los datos de la sucursal (cine) activa desde el backend.
+     * Recupera información detallada incluyendo salas, películas y el historial de ventas.
+     * Ordena las ventas cronológicamente (de la más reciente a la más antigua) y las renderiza en la tabla.
+     * @returns {Promise<void>} Promesa que se resuelve tras cargar y renderizar los datos.
+     */
     function loadCineData() {
         return fetch(`${BASE_URL}/cines/${branch.id}`)
             .then(r => {
@@ -52,6 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             .then(data => {
                 cineData = data;
+                // Ordenar las ventas por fecha en orden descendente (más recientes primero)
                 const ventas = (cineData.ventas || []).slice().sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
                 renderSalesTable(ventas);
             })
@@ -65,13 +117,21 @@ document.addEventListener('DOMContentLoaded', () => {
                             <line x1="12" y1="16" x2="12.01" y2="16"></line>
                         </svg>
                         Error al cargar las ventas. Verificá que el backend esté activo.
-                    </td></tr>`;
+                     </td></tr>`;
             });
     }
 
+    // Invocar la carga inicial de datos del cine al montar la vista
     loadCineData();
 
-    // ── Render sales table ────────────────────────────────────────────────────
+    // ── Renderizado de la tabla de ventas ─────────────────────────────────────
+    /**
+     * Renderiza el historial de ventas en la tabla de la interfaz de usuario.
+     * Calcula la cantidad de entradas basándose en el precio unitario y el monto pagado,
+     * formatea fechas y valores monetarios de acuerdo a la configuración local (es-AR),
+     * y maneja la visualización de datos faltantes mediante fallbacks y placeholders.
+     * @param {Array<Object>} ventas - Listado de ventas a renderizar.
+     */
     function renderSalesTable(ventas) {
         salesTableBody.innerHTML = '';
         if (!ventas || ventas.length === 0) {
@@ -92,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 ? `$${venta.pago.monto.toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                 : '$0,00';
 
-            // Try to get movie/function info from venta.funcion
+            // Intentar obtener información de película y función desde la entidad del backend
             let movieTitle   = '—';
             let functionTime = '—';
             
@@ -101,11 +161,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 movieTitle   = venta.funcion.pelicula ? venta.funcion.pelicula.titulo : '—';
             }
 
-            // Fallback: annotated from modal state on freshly added rows
+            // Fallback: usar anotaciones manuales del estado del modal para filas recién agregadas
             if (movieTitle === '—' && venta._movieTitle)   movieTitle   = venta._movieTitle;
             if (functionTime === '—' && venta._funcTime)   functionTime = venta._funcTime;
             
-            // Calculate qty based on monto / unit price, as sale no longer stores explicit tickets
+            // Calcular cantidad de entradas basándose en el monto / precio unitario, ya que
+            // la venta no persiste una relación directa de cantidad, sino entradas asociadas a la función
             let calcQty = 0;
             if (venta.pago && venta.pago.monto) {
                 calcQty = Math.round(venta.pago.monto / PRECIO_ENTRADA);
@@ -125,14 +186,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ════════════════════════════════════════════════════════════════════════
-    //  MODAL LOGIC
+    //  LÓGICA DEL MODAL (COMPRA DE ENTRADAS)
     // ════════════════════════════════════════════════════════════════════════
 
-    // ── Open / close ──────────────────────────────────────────────────────────
+    // ── Apertura y cierre ───────────────────────────────────────────────────
     document.getElementById('btnNuevaVenta').addEventListener('click', openModal);
     btnModalClose.addEventListener('click', closeModal);
+    // Permite cerrar el modal haciendo clic fuera del contenedor (en el backdrop)
     ventaModal.addEventListener('click', e => { if (e.target === ventaModal) closeModal(); });
 
+    /**
+     * Abre el modal de registro de nueva venta.
+     * Inicializa el estado del modal (wizard), muestra el modal en pantalla,
+     * y dispara la precarga de los clientes y películas disponibles.
+     */
     function openModal() {
         resetModal();
         ventaModal.classList.remove('hidden');
@@ -140,11 +207,19 @@ document.addEventListener('DOMContentLoaded', () => {
         populatePeliculas();
     }
 
+    /**
+     * Cierra el modal de registro de nueva venta, ocultando el diálogo.
+     */
     function closeModal() {
         ventaModal.classList.add('hidden');
     }
 
-    // ── Reset all modal state & DOM ───────────────────────────────────────────
+    // ── Reinicio del estado interno y vista del modal ────────────────────────
+    /**
+     * Reinicia por completo el estado interno del asistente (wizard) de venta y limpia
+     * todos los campos, errores y secciones del formulario en el DOM para preparar
+     * una nueva operación limpia desde el Paso 1.
+     */
     function resetModal() {
         ms = {
             currentStep:    1,
@@ -162,44 +237,52 @@ document.addEventListener('DOMContentLoaded', () => {
             fechaVenta:     new Date().toISOString().split('T')[0]
         };
 
-        // Step 1
+        // Paso 1
         setClientMode('existing');
         document.getElementById('inputNombre').value  = '';
         document.getElementById('inputEmail').value   = '';
         document.getElementById('emailError').textContent = '';
 
-        // Step 2
+        // Paso 2
         document.getElementById('selectPelicula').value = '';
         const funcSel = document.getElementById('selectFuncion');
         funcSel.innerHTML  = '<option value="">Primero seleccione una película</option>';
         funcSel.disabled   = true;
         document.getElementById('funcionError').textContent = '';
 
-        // Step 3
+        // Paso 3
         document.getElementById('inputCantidad').value = '1';
         document.getElementById('cantidadError').textContent = '';
         document.getElementById('seatsGrid').innerHTML = '';
 
-        // Step 4
+        // Paso 4
         document.getElementById('pay-tarjeta').classList.add('active');
         document.getElementById('pay-efectivo').classList.remove('active');
         document.getElementById('inputFecha').value = ms.fechaVenta;
         document.getElementById('saleSummary').innerHTML = '';
 
-        // Step 5
+        // Paso 5
         document.getElementById('modal-step-5').innerHTML = '';
 
         goToStep(1);
     }
 
-    // ── Step navigation ───────────────────────────────────────────────────────
+    // ── Navegación paso a paso (Wizard) ──────────────────────────────────────
+    /**
+     * Navega a un paso específico del wizard del modal de venta.
+     * Oculta todas las secciones del modal y muestra únicamente la sección correspondiente
+     * al paso indicado. Actualiza la barra indicadora visual de pasos,
+     * y configura la visibilidad de los botones de navegación ("Siguiente", "Atrás", etc.)
+     * de acuerdo al contexto del paso actual.
+     * @param {number} step - Número del paso al que se desea navegar (1 a 5).
+     */
     function goToStep(step) {
         [1, 2, 3, 4, 5].forEach(s =>
             document.getElementById(`modal-step-${s}`).classList.add('hidden')
         );
         document.getElementById(`modal-step-${step}`).classList.remove('hidden');
 
-        // Update dots (only 1-4 shown in indicator)
+        // Actualiza el indicador de progreso visual (círculos 1 a 4)
         for (let i = 1; i <= 4; i++) {
             const dot = document.getElementById(`dot-${i}`);
             const lbl = document.getElementById(`lbl-${i}`);
@@ -210,7 +293,8 @@ document.addEventListener('DOMContentLoaded', () => {
             else                { dot.textContent = i; }
         }
 
-        // Footer / indicator visibility
+        // Visibilidad del footer y el indicador de progreso.
+        // Se ocultan en el Paso 5 (pantalla de éxito final).
         if (step === 5) {
             stepIndicator.classList.add('hidden');
             modalFooter.classList.add('hidden');
@@ -219,12 +303,12 @@ document.addEventListener('DOMContentLoaded', () => {
             modalFooter.classList.remove('hidden');
         }
 
-        // Prev button
+        // Configuración del botón "Volver atrás"
         (step === 1 || step === 5)
             ? btnPrevStep.classList.add('hidden')
             : btnPrevStep.classList.remove('hidden');
 
-        // Next button label
+        // Configuración del botón "Siguiente"
         if (step === 5) {
             btnNextStep.classList.add('hidden');
         } else {
@@ -236,6 +320,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ms.currentStep = step;
     }
 
+    // Botón "Siguiente" o "Generar Venta" del modal
     btnNextStep.addEventListener('click', async () => {
         const step = ms.currentStep;
         if (step < 4) {
@@ -248,14 +333,19 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Botón "Volver atrás" del modal
     btnPrevStep.addEventListener('click', () => {
         if (ms.currentStep > 1) goToStep(ms.currentStep - 1);
     });
 
     // ════════════════════════════════════════════════════════════════════════
-    //  STEP 1 — CLIENT
+    //  PASO 1 — SELECCIÓN / ALTA DE CLIENTE
     // ════════════════════════════════════════════════════════════════════════
 
+    /**
+     * Obtiene el listado de clientes que tienen compras registradas en este cine
+     * y popula el selector de clientes existentes en el Paso 1 del modal.
+     */
     function fetchClientes() {
         fetch(`${BASE_URL}/cines/${branch.id}/clientes`)
             .then(r => r.json())
@@ -276,6 +366,11 @@ document.addEventListener('DOMContentLoaded', () => {
             });
     }
 
+    /**
+     * Configura el modo de selección de cliente (cliente existente vs. nuevo cliente).
+     * Muestra u oculta los controles de formulario correspondientes y actualiza el estado visual de los botones de alternancia.
+     * @param {'existing'|'new'} mode - El modo de cliente a establecer.
+     */
     function setClientMode(mode) {
         ms.clientMode = mode;
         const isExisting = mode === 'existing';
@@ -290,9 +385,13 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('toggle-new').addEventListener('click',      () => setClientMode('new'));
 
     // ════════════════════════════════════════════════════════════════════════
-    //  STEP 2 — MOVIE & FUNCTION
+    //  PASO 2 — SELECCIÓN DE PELÍCULA Y FUNCIÓN HORARIA
     // ════════════════════════════════════════════════════════════════════════
 
+    /**
+     * Popula el selector de películas del Paso 2 con los títulos y géneros de las películas
+     * actualmente asociadas a la sucursal de cine activa.
+     */
     function populatePeliculas() {
         if (!cineData || !cineData.peliculas) return;
         const sel = document.getElementById('selectPelicula');
@@ -305,6 +404,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Escucha de cambio en película: carga dinámicamente sus funciones horarias y salas disponibles
     document.getElementById('selectPelicula').addEventListener('change', e => {
         const peliculaId = parseInt(e.target.value) || null;
         ms.selectedPeliculaId  = peliculaId;
@@ -321,7 +421,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Gather all funciones for this pelicula from every sala in the cine
+        // Recopila todas las funciones asociadas a la película seleccionada en todas las salas de esta sucursal
         const funciones = [];
         (cineData.salas || []).forEach(sala => {
             (sala.funciones || []).forEach(func => {
@@ -339,6 +439,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Popula el selector de funciones con los horarios y salas disponibles
         funcSel.innerHTML = '<option value="">Seleccionar función...</option>';
         funciones.forEach((func, idx) => {
             const opt = document.createElement('option');
@@ -349,6 +450,7 @@ document.addEventListener('DOMContentLoaded', () => {
         funcSel.disabled = false;
     });
 
+    // Escucha de cambio en la función seleccionada
     document.getElementById('selectFuncion').addEventListener('change', e => {
         const idx = e.target.value;
         if (idx === '') {
@@ -363,9 +465,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ════════════════════════════════════════════════════════════════════════
-    //  STEP 3 — SEATS
+    //  PASO 3 — SELECCIÓN DE ENTRADAS Y ASIENTOS
     // ════════════════════════════════════════════════════════════════════════
 
+    /**
+     * Construye y dibuja dinámicamente la cuadrícula interactiva de asientos para la sala seleccionada.
+     * Consulta los asientos ya ocupados en la función actual y los deshabilita en la grilla visual,
+     * configura los eventos de selección/deselección de asientos libres, y actualiza el texto informativo
+     * sobre la disponibilidad total de la sala.
+     */
     function buildSeatsGrid() {
         const sala    = ms.selectedSala;
         const funcion = ms.selectedFuncion;
@@ -376,7 +484,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ms.occupiedSeats    = occupiedSeats;
         ms.selectedSeats    = [];
 
-        // Layout: up to 10 columns
+        // Estructura visual: cuadrícula flexible de hasta 10 columnas por fila
         const cols = Math.min(10, capacidad);
         const rows = Math.ceil(capacidad / cols);
         const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -396,6 +504,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 btn.textContent = label;
                 btn.dataset.seat = label;
 
+                // Deshabilitar y marcar visualmente los asientos que ya han sido ocupados/vendidos en esta función
                 if (occupiedSeats.includes(label)) {
                     btn.classList.add('seat-occupied');
                     btn.disabled = true;
@@ -413,12 +522,19 @@ document.addEventListener('DOMContentLoaded', () => {
             `Sala ${sala.numero} — ${available} de ${capacidad} asiento(s) disponibles`;
     }
 
+    /**
+     * Alterna (selecciona o deselecciona) un asiento específico en la cuadrícula visual de asientos.
+     * Verifica que no se supere la cantidad de entradas indicada por el usuario en el Paso 3.
+     * @param {HTMLButtonElement} btn - El elemento de botón del asiento interactivo.
+     * @param {string} label - El identificador del asiento (por ejemplo, "A1").
+     */
     function toggleSeat(btn, label) {
         const cantidad = parseInt(document.getElementById('inputCantidad').value) || 1;
         if (btn.classList.contains('seat-selected')) {
             btn.classList.remove('seat-selected');
             ms.selectedSeats = ms.selectedSeats.filter(s => s !== label);
         } else {
+            // Asegura que no se puedan seleccionar más asientos que la cantidad estipulada
             if (ms.selectedSeats.length < cantidad) {
                 btn.classList.add('seat-selected');
                 ms.selectedSeats.push(label);
@@ -427,7 +543,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('cantidadError').textContent = '';
     }
 
-    // When quantity changes, clear seat selection
+    // Al cambiar la cantidad de entradas deseadas, se resetea la selección de asientos actual
     document.getElementById('inputCantidad').addEventListener('change', () => {
         ms.selectedSeats = [];
         document.querySelectorAll('.seat-btn.seat-selected').forEach(b => b.classList.remove('seat-selected'));
@@ -435,25 +551,33 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // ════════════════════════════════════════════════════════════════════════
-    //  STEP 4 — PAYMENT & SUMMARY
+    //  PASO 4 — MÉTODO DE PAGO Y RESUMEN DE COMPRA
     // ════════════════════════════════════════════════════════════════════════
 
+    // Selección de método de pago: TARJETA
     document.getElementById('pay-tarjeta').addEventListener('click', () => {
         ms.paymentType = 'TARJETA';
         document.getElementById('pay-tarjeta').classList.add('active');
         document.getElementById('pay-efectivo').classList.remove('active');
     });
 
+    // Selección de método de pago: EFECTIVO
     document.getElementById('pay-efectivo').addEventListener('click', () => {
         ms.paymentType = 'EFECTIVO';
         document.getElementById('pay-efectivo').classList.add('active');
         document.getElementById('pay-tarjeta').classList.remove('active');
     });
 
+    // Control del cambio en la fecha de la venta
     document.getElementById('inputFecha').addEventListener('change', e => {
         ms.fechaVenta = e.target.value;
     });
 
+    /**
+     * Genera e inyecta dinámicamente el resumen detallado de la venta en el Paso 4 del modal.
+     * Recopila datos de cliente, película, sala, horario, asientos seleccionados,
+     * cantidad de entradas, precio unitario y calcula el monto total a pagar.
+     */
     function buildSummary() {
         const funcion  = ms.selectedFuncion;
         const sala     = ms.selectedSala;
@@ -515,9 +639,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ════════════════════════════════════════════════════════════════════════
-    //  VALIDATION
+    //  VALIDACIÓN DE PASOS DEL WIZARD
     // ════════════════════════════════════════════════════════════════════════
 
+    /**
+     * Valida la corrección de los datos ingresados en el paso actual del wizard
+     * antes de permitir la navegación al siguiente paso.
+     * - Paso 1: Valida selección de cliente existente o ingreso de datos válidos para nuevo cliente (nombre y email).
+     * - Paso 2: Valida que se haya seleccionado una función horaria.
+     * - Paso 3: Valida que la cantidad de entradas sea >= 1 y coincida exactamente con la cantidad de asientos seleccionados en la grilla.
+     * @param {number} step - El número de paso del wizard a validar.
+     * @returns {boolean} True si los datos del paso son válidos y puede continuar; False en caso contrario.
+     */
     function validateStep(step) {
         if (step === 1) {
             if (ms.clientMode === 'existing') {
@@ -532,12 +665,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (!nombre) { alert('Ingrese el nombre del cliente.'); return false; }
 
+                // Expresión regular estándar para validación sintáctica de direcciones de correo electrónico
                 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
                 if (!email || !emailRegex.test(email)) {
                     emailError.textContent = 'Ingrese un email válido.';
                     return false;
                 }
 
+                // Verificar localmente que el email no corresponda a un cliente ya cargado
                 const exists = allClientes.some(c => c.email.toLowerCase() === email.toLowerCase());
                 if (exists) {
                     emailError.textContent = 'Este email ya está registrado. Selecciónelo como cliente existente.';
@@ -568,6 +703,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 cantError.textContent = 'La cantidad debe ser al menos 1.';
                 return false;
             }
+            // Obligar a que el usuario pinche exactamente tantos asientos como entradas desea comprar
             if (ms.selectedSeats.length !== cantidad) {
                 cantError.textContent =
                     `Seleccioná exactamente ${cantidad} asiento(s). Tenés ${ms.selectedSeats.length} marcado(s).`;
@@ -583,9 +719,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ════════════════════════════════════════════════════════════════════════
-    //  CONFIRM & SAVE (async)
+    //  CONFIRMACIÓN Y ENVÍO DE LA TRANSACCIÓN (ATÓMICO)
     // ════════════════════════════════════════════════════════════════════════
 
+    /**
+     * Confirma y procesa de forma asíncrona la venta.
+     * Realiza un flujo transaccional en el frontend/backend:
+     * 1. Registra al cliente en el servidor si se trata de un nuevo cliente.
+     * 2. Envía la solicitud de registro de venta al endpoint atómico del cine en el backend,
+     *    pasando DNI, función, asientos elegidos, tipo de pago y fecha.
+     * 3. Refresca los datos del cine y el historial de ventas en la pantalla principal.
+     * 4. Lanza y dibuja la pantalla de éxito con los comprobantes de entrada (tickets) correspondientes.
+     * @async
+     * @returns {Promise<void>}
+     */
     async function confirmSale() {
         const funcion  = ms.selectedFuncion;
         const cantidad = ms.selectedSeats.length;
@@ -596,11 +743,12 @@ document.addEventListener('DOMContentLoaded', () => {
         );
         if (!confirmed) return;
 
+        // Cambiar estado visual del botón de confirmación
         btnNextStep.disabled    = true;
         btnNextStep.textContent = 'Guardando...';
 
         try {
-            // ── 1. Crear cliente si es nuevo ─────────────────────────────────
+            // ── 1. Crear cliente en el backend en caso de ser nuevo ─────────
             let clienteObj;
             if (ms.clientMode === 'existing' && ms.selectedCliente) {
                 clienteObj = ms.selectedCliente;
@@ -638,11 +786,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(errBody.error || 'Error al registrar la venta en el cine.');
             }
 
-            // ── 3. Refrescar datos del cine ──────────────────────────────────
+            // ── 3. Refrescar datos completos del cine en la pantalla principal 
             const freshCineResp = await fetch(`${BASE_URL}/cines/${branch.id}`);
             if (!freshCineResp.ok) throw new Error('Error al refrescar los datos del cine.');
             cineData = await freshCineResp.json();
 
+            // Ordenar cronológicamente e inyectar datos calculados locales en la fila fresca
             const ventasOrdenadas = (cineData.ventas || []).slice()
                 .sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
 
@@ -652,14 +801,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             renderSalesTable(ventasOrdenadas);
 
-            // ── 4. Construir entradas para pantalla de éxito ─────────────────
+            // ── 4. Construir lista de entradas para la pantalla de éxito ─────
             const displayEntradas = ms.selectedSeats.map(asiento => ({
                 asiento,
                 precio: PRECIO_ENTRADA
             }));
             const total = cantidad * PRECIO_ENTRADA;
 
-            // ── 5. Mostrar pantalla de éxito ─────────────────────────────────
+            // ── 5. Mostrar la pantalla de éxito (Paso 5) ─────────────────────
             showSuccessScreen(clienteObj, funcion, displayEntradas, total, cineData.ventas.length);
 
         } catch (err) {
@@ -671,15 +820,26 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ════════════════════════════════════════════════════════════════════════
-    //  STEP 5 — SUCCESS SCREEN
+    //  PASO 5 — COMPROBANTES DE ENTRADAS (PANTALLA DE ÉXITO)
     // ════════════════════════════════════════════════════════════════════════
 
+    /**
+     * Muestra la pantalla de éxito (Paso 5) renderizando los comprobantes de entradas (tickets) individuales.
+     * Calcula números de ticket correlativos basados en el historial y expone detalles completos
+     * de la compra (película, género, sala, horario, cliente y método de pago).
+     * @param {Object} cliente - Los datos del cliente comprador.
+     * @param {Object} funcion - La función de cine comprada.
+     * @param {Array<Object>} entradas - La lista de entradas generadas (cada una con su asiento y precio).
+     * @param {number} total - El costo total de la transacción.
+     * @param {number} totalVentasCine - Cantidad total de ventas del cine para calcular el número de ticket.
+     */
     function showSuccessScreen(cliente, funcion, entradas, total, totalVentasCine) {
         goToStep(5);
 
-        // Ticket numbers: base them on total ventas * some offset + seat index
+        // Numeración base de tickets para la sucursal
         const ticketBase = (totalVentasCine - 1) * 10;
 
+        // Genera el código HTML para cada ticket individual
         const ticketsHtml = entradas.map((entrada, idx) => {
             const ticketNum = `TK-${String(ticketBase + idx + 1).padStart(4, '0')}`;
             return `
@@ -701,6 +861,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>`;
         }).join('');
 
+        // Inserta la vista estructurada con el botón de cierre finalizador
         document.getElementById('modal-step-5').innerHTML = `
             <div class="success-screen">
                 <div class="success-icon">
