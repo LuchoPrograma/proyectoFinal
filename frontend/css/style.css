@@ -385,6 +385,12 @@ h2 {
     }
 }
 
+.controls-actions-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
 .controls-title-group h2 {
     font-size: 1.5rem;
     font-weight: 700;
@@ -555,6 +561,14 @@ h2 {
     margin: 0 auto 1rem;
     display: block;
     color: var(--error-color);
+}
+
+.text-center {
+    text-align: center;
+}
+
+.text-error {
+    color: #ff6b6b;
 }
 
 .dashboard-footer {
@@ -770,7 +784,7 @@ h2 {
 
 /* Campos de formulario */
 .form-group {
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
 }
 
 .form-label {
@@ -795,8 +809,84 @@ h2 {
     font-size: 0.95rem;
     outline: none;
     transition: border-color 0.2s;
-    -webkit-appearance: none;
     appearance: none;
+}
+
+/* Forms layout */
+.form-container {
+    background-color: var(--card-bg);
+    border-radius: 16px;
+    padding: 2.5rem;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+    max-width: 600px;
+    margin: 2rem auto;
+    border: 1px solid var(--card-border);
+}
+
+.form-title {
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--card-border);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--card-border);
+}
+
+.split-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.form-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 2rem;
+}
+
+.table-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.table-card h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: #fff;
+}
+
+.mb-1-5 {
+    margin-bottom: 1.5rem !important;
+}
+
+.mt-1 {
+    margin-top: 1rem !important;
+}
+
+.w-100 {
+    width: 100% !important;
+}
+
+.flex-1 {
+    flex: 1 !important;
 }
 
 .form-input:focus,

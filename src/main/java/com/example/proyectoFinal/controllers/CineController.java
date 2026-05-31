@@ -41,4 +41,15 @@ public class CineController extends BaseControllerImpl<Cine, CineServiceImpl> {
                     .body("{\"error\":\"" + e.getMessage() + "\"}");
         }
     }
+
+    @PostMapping("/{id}/empleados")
+    public ResponseEntity<?> agregarEmpleado(@PathVariable Long id,
+                                             @RequestBody com.example.proyectoFinal.dto.CrearEmpleadoRequest request) {
+        try {
+            return ResponseEntity.status(HttpStatus.OK).body(servicio.agregarEmpleado(id, request));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("{\"error\":\"" + e.getMessage() + "\"}");
+        }
+    }
 }

@@ -35,7 +35,6 @@ public class VentaServiceImpl extends BaseServiceImpl<Venta, Long> implements Ve
 
     /**
      * Registra una venta de forma atómica:
-     * 1. Valida que el cliente exista y no haya comprado ya para esa función.
      * 2. Delega a FuncionService la validación de asientos y creación de entradas.
      * 3. Persiste el Pago de forma independiente (sin cascade desde Venta).
      * 4. Crea y persiste la Venta con referencias directas a cliente, funcion y pago.
@@ -48,14 +47,6 @@ public class VentaServiceImpl extends BaseServiceImpl<Venta, Long> implements Ve
         Cliente cliente = clienteRepository.findById(request.getClienteId())
                 .orElseThrow(() -> new Exception("No existe el cliente con id: " + request.getClienteId()));
 
-        // 2. Verificar que el cliente no haya comprado ya para esta función
-        Long comprasExistentes = ventaRepository.countComprasByClienteAndFuncion(
-                request.getClienteId(),
-                request.getFuncionId());
-        if (comprasExistentes > 0) {
-            throw new Exception("El cliente ya ha comprado entradas para esta función. " +
-                    "Un cliente no puede comprar 2 veces para la misma función.");
-        }
 
         // 3. Delegar validación de asientos y creación de entradas a FuncionService
         //    FuncionService persiste las entradas asociadas a la función

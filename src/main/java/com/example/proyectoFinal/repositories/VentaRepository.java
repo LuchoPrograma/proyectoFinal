@@ -21,15 +21,4 @@ public interface VentaRepository extends BaseRepository<Venta, Long> {
     @Query(nativeQuery = true, value = "UPDATE venta SET fk_cine = :cineId WHERE id = :id")
     void assignToCine(@Param("id") Long id, @Param("cineId") Long cineId);
 
-    /**
-     * Verifica si un cliente ya compró para una función específica.
-     * Aprovecha la relación directa venta.fk_funcion y venta.fk_cliente
-     * evitando el join a través de entrada y funcion_entrada.
-     */
-    @Query(nativeQuery = true, value = """
-            SELECT COUNT(*) FROM venta
-            WHERE fk_cliente = :clienteId AND fk_funcion = :funcionId
-            """)
-    Long countComprasByClienteAndFuncion(@Param("clienteId") Long clienteId,
-                                          @Param("funcionId") Long funcionId);
 }

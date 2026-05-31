@@ -14,4 +14,6 @@ public interface CineService extends BaseService<Cine, Long> {
      * Se utiliza para el selector de clientes en el frontend.
      */
     List<Cliente> obtenerClientesPorCine(Long cineId) throws Exception;
+
+    com.example.proyectoFinal.entities.Empleado agregarEmpleado(Long cineId, com.example.proyectoFinal.dto.CrearEmpleadoRequest request) throws Exception;
 }
