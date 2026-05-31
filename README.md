@@ -2,6 +2,9 @@
 
 Sistema web para la gestión de sucursales de cine. Permite administrar ventas de entradas, programar funciones, gestionar empleados y consultar el historial de operaciones por sucursal.
 
+Por Luciano Augusto Federicci - Comisión A
+Programación Orientada a Objetos - Prof. Martín Vargas
+
 ---
 
 ## Tabla de Contenidos
